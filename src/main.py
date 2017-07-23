@@ -30,8 +30,11 @@ def trackFeatures(img0, img1, p0):
     p1 = np.float32(p1)
 
     assert(sum(status) == len(p1))
-    return (p1, status, err)
 
+    # Reshape p1 to have the extra dimension as it's necessary for other functions
+    p1 = p1.reshape(-1, 1, 2);
+
+    return (p1, status, err)
 
 def main():
     img0 = None; img1 = None;
@@ -55,7 +58,7 @@ def main():
 
     p1, status, err = trackFeatures(img0, img1, p0)
 
-    cv2.destroyAllWindows()
+    
 
 if __name__ == "__main__":
     main()
