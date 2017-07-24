@@ -44,7 +44,6 @@ class MonoVisualOdometer:
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
-        pdb.set_trace()
         _, self.curr_R, self.curr_t = self.getTranslationRotation()
         self.step()
 
@@ -122,7 +121,7 @@ class MonoVisualOdometer:
 
             # If you lose too many features, redetect
             if len(self.prev_feature_pts < 2000):
-                _, self.prev_feature_pts = detectFeatures(self.prev_img)
+                _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
                 self.prev_feature_pts, self.curr_feature_pts = \
                     self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
@@ -130,19 +129,36 @@ class MonoVisualOdometer:
             E, R, t = self.getTranslationRotation();
 
             x, y, z = self.getGroundtruthXYZ()
-            scale   = self.getScale(x, prev_x, y, prev_y, z, prev_z)
-
+            scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
+            
             # Update values of curr_t, curr_R
             self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
             self.curr_R = np.dot(R, self.curr_R)
 
-            curr_x = curr_t[:,0][0]
-            curr_y = curr_t[:,0][1]
-            curr_z = curr_t[:,0][2]
+            curr_x = self.curr_t[:,0][0]
+            curr_y = self.curr_t[:,0][1]
+            curr_z = self.curr_t[:,0][2]
+
+            prev_x, prev_y, prev_z = (x, y, z)
+
+            # Draw
+            cv2.circle(traj, (int(curr_x + 300), int(curr_z + 100)), 1, (255, 0, 0), 2)
+            cv2.circle(traj, (int(x + 300), int(z + 100)), 1, (0, 255, 0), 2)
+            cv2.rectangle(traj, (10, 30), (550, 50), (0, 0, 0), thickness=-1)
+            text = "Coordinates: x = {:02f}m y = {:02f}m z = {:02f}m   "
+            text = text.format(curr_x, curr_y, curr_z)
+            cv2.putText(traj, text, (10, 50), cv2.FONT_HERSHEY_PLAIN, 1, 255)
+
+            cv2.imshow("Road facing camera", self.curr_img);
+            cv2.imshow("Trajectory", traj);
+            cv2.waitKey(1)
 
             self.step()
 
-    def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
+        cv2.waitKey(0)
+        cv2.putText(traj, "Done", (10, 100), cv2.FONT_HERSHEY_PLAIN, 1, 255)
+
+    def getAbsoluteScale(self, x, prev_x, y, prev_y, z, prev_z):
         return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
             
     def getTranslationRotation(self):
@@ -156,7 +172,7 @@ class MonoVisualOdometer:
         return (E, R, t)
 
 
-    
-
+a = MonoVisualOdometer('/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/sequences/00/image_0', '/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/poses/00.txt', '/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/sequences/00/calib.txt')   
+a.run(20)
 
 
