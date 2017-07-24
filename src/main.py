@@ -42,12 +42,19 @@ def trackFeatures(img0, img1, p0):
     p1 = list(p1)
     p1 = np.float32(p1)
 
+    # Filter out the points in p0 that could not be tracked
+    p0 = [p if s else None for s, p in zip(status, p0)]
+    p0 = filter(lambda p: p is not None, p0)
+    p0 = list(p0)
+    p0 = np.float32(p0)
+
     assert(sum(status) == len(p1))
+    assert(sum(status) == len(p0))
 
     # Reshape p1 to have the extra dimension as it's necessary for other functions
     p1 = p1.reshape(-1, 1, 2);
-
-    return (p1, status, err)
+    p0 = p0.reshape(-1, 1, 2);
+    return (p0, p1, status, err)
 
 def main():
     img0 = None; img1 = None;
@@ -69,7 +76,7 @@ def main():
     p0 = detectFeatures(img0)
     # img_with_features = cv2.drawKeypoints(img, p0, color=(255, 0, 0), outImage=None)
 
-    p1, status, err = trackFeatures(img0, img1, p0)
+    p0, p1, status, err = trackFeatures(img0, img1, p0)
 
     
 
