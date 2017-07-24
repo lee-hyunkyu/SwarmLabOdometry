@@ -123,7 +123,6 @@ class MonoVisualOdometer:
             curr_z = self.curr_t[:,0][2]
 
             prev_x, prev_y, prev_z = (x, y, z)
-
             # Draw
             cv2.circle(traj, (int(curr_x + 300), int(curr_z + 100)), 1, (255, 0, 0), 2)
             cv2.circle(traj, (int(x + 300), int(z + 100)), 1, (0, 255, 0), 2)

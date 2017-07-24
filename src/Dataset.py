@@ -52,6 +52,7 @@ class KittiDataset(Dataset):
         self.focal              = float(words[1])
         self.principal_point    = (float(words[3]), float(words[7]))
 
+        self.ground_truth_file  = open(self.ground_truth_file_path)
 
     def append_image_file_path(self):
         last_char = self.images_file_path[-1]
@@ -61,8 +62,7 @@ class KittiDataset(Dataset):
             self.images_file_path += '/{:06d}.png'
 
     def get_ground_truth(self):
-        ground_truth_file = open(self.ground_truth_file_path)
-        line = line = ground_truth_file.readline()
+        line = line = self.ground_truth_file.readline()
         words = re.split(' ', line)
         x = float(words[3])
         y = float(words[7])
