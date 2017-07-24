@@ -102,6 +102,7 @@ class MonoVisualOdometer:
         # Initialize values
         t_f = self.t
         R_f = self.R
+        prev_x, prev_y, prev_z = self.getGroundtruthXYZ()
 
         # For video
         cv2.namedWindow('Road facing camera', cv2.WINDOW_AUTOSIZE);
@@ -109,6 +110,7 @@ class MonoVisualOdometer:
         traj = np.zeros((600, 600, 3), np.uint8)
 
         for i in range(2, limit):
+            # Get the current image
             curr_img_file = self.images_file_path.format(i)
             self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
 
@@ -121,8 +123,13 @@ class MonoVisualOdometer:
                 self.prev_feature_pts, self.curr_feature_pts = \
                     self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
+            x, y, z = self.getGroundtruthXYZ()
+            scale   = self.getScale(x, prev_x, y, prev_y, z, prev_z)
+
             self.step()
 
+    def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
+        return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
             
 
     def getTranslationRotation(self):
