@@ -22,13 +22,16 @@ class MonoVisualOdometer:
         line                    = calib_file.readline()
         words                   = re.split(' ', line)
         self.focal              = float(words[1])
-        self.principal_points   = (float(words[3]), float(words[7]))
+        self.principal_point    = (float(words[3]), float(words[7]))
 
         # Set the needed variables to None or create if possible
         self.prev_img               = None;
         self.curr_img               = None;
         self.prev_feature_pts       = None;
         self.curr_feature_pts       = None;
+        self.prev_key_features_pts  = None;
+        self.curr_key_features_pts  = None;
+
         self.fast_detector          = cv2.FastFeatureDetector_create()
 
     def end(self):
@@ -76,6 +79,17 @@ class MonoVisualOdometer:
 
     def run(self):
         pass
+
+    def getTranslationRotation(self):
+        E, mask = cv2.findEssentialMat( self.curr_feature_pts, 
+                                        self.prev_feature_pts,
+                                        focal=self.focal, pp=self.principal_point,
+                                        method=cv2.RANSAC, prob=0.999, threshold=1.0)
+        _, R, t, mask = cv2.recoverPose(E, self.curr_feature_pts,
+                                        self.prev_feature_pts,
+                                        focal=self.focal, pp=self.principal_point)
+        return (E, R, t)
+
 
     
 
