@@ -1,6 +1,19 @@
 import numpy as np 
 import cv2
 import pdb
+import re
+
+def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
+    ''' Data should be from a ground truth file'''
+    return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
+
+def getXYZ(file):
+    line = file.readline()
+    words = re.split(' ', line)
+    x = float(words[3])
+    y = float(words[7])
+    z = float(words[-1])
+    return (x, y, z)
 
 def detectFeatures(img):
     fast = cv2.FastFeatureDetector_create()
