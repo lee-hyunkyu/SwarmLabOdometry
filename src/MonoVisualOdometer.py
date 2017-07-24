@@ -29,8 +29,6 @@ class MonoVisualOdometer:
         self.curr_img               = None;
         self.prev_feature_pts       = None;
         self.curr_feature_pts       = None;
-        self.prev_key_features_pts  = None;
-        self.curr_key_features_pts  = None; # In general, never calculated
         self.fast_detector          = cv2.FastFeatureDetector_create()
         self.E                      = None;
         self.R                      = None;
@@ -44,10 +42,11 @@ class MonoVisualOdometer:
         self.curr_img = cv2.imread(f1)
         self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
         self.curr_img = cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY)
-        self.prev_key_features_pts, self.prev_feature_pts = self.detectFeatures(self.prev_img)
+        _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
         self.E, self.R, self.t = getTranslationRotation()
+        self.step()
 
     def end(self):
         self.ground_truth_file.close()
@@ -92,8 +91,39 @@ class MonoVisualOdometer:
 
         return (img0_features, img1_features)
 
-    def run(self):
-        pass
+    def step(self):
+        ''' Sets current to be the previous '''
+        self.prev_img = self.curr_img;
+        self.curr_img = None;
+        self.prev_feature_pts = self.curr_feature_pts;
+        self.curr_feature_pts = None; 
+
+    def run(self, limit):
+        # Initialize values
+        t_f = self.t
+        R_f = self.R
+
+        # For video
+        cv2.namedWindow('Road facing camera', cv2.WINDOW_AUTOSIZE);
+        cv2.namedWindow('Trajectory', cv2.WINDOW_AUTOSIZE);
+        traj = np.zeros((600, 600, 3), np.uint8)
+
+        for i in range(2, limit):
+            curr_img_file = self.images_file_path.format(i)
+            self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
+
+            self.prev_feature_pts, self.curr_feature_pts = \
+                self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
+
+            # If you lose too many features, redetect
+            if len(self.prev_feature_pts < 2000):
+                _, self.prev_feature_pts = detectFeatures(self.prev_img)
+                self.prev_feature_pts, self.curr_feature_pts = \
+                    self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
+
+            self.step()
+
+            
 
     def getTranslationRotation(self):
         E, mask = cv2.findEssentialMat( self.curr_feature_pts, 
