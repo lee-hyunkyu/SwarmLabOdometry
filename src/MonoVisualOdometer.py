@@ -87,7 +87,12 @@ class MonoVisualOdometer:
 
         # Filter the invalid features
         img1_features = img1_features[status==1]
+        img0_features = img0_features[:,0]
         img0_features = img0_features[status==1]
+
+        # Reshape to be correct shape
+        img1_features = img1_features.reshape(-1, 1, 2)
+        img0_features = img0_features.reshape(-1, 1, 2)
 
         return (img0_features, img1_features)
 
