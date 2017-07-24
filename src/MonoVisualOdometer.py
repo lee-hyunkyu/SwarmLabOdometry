@@ -1,28 +1,14 @@
 import numpy as np 
 import cv2 
 import re 
-
+import sys
 import pdb
+import os
 
 class MonoVisualOdometer:
-    def __init__(self, images_file_path, ground_truth_file_path, calib_file_path):
-        ''' Assumes KITTI Dataset '''
-        self.images_file_path       = images_file_path
-        self.ground_truth_file_path = ground_truth_file_path
+    def __init__(self, dataset):
 
-        last_char_in_path = self.images_file_path[-1]
-        if last_char_in_path == '/':
-            self.images_file_path   = self.images_file_path + "{:06d}.png"
-        else:
-            self.images_file_path   = self.images_file_path + "/{:06d}.png"
-        self.ground_truth_file      = open(self.ground_truth_file_path)
-
-        # Get Camera Caliberation settings
-        calib_file              = open(calib_file_path)
-        line                    = calib_file.readline()
-        words                   = re.split(' ', line)
-        self.focal              = float(words[1])
-        self.principal_point    = (float(words[3]), float(words[7]))
+        self.dataset = dataset
 
         # Set the needed variables to None or create if possible
         self.prev_img               = None;
@@ -34,9 +20,11 @@ class MonoVisualOdometer:
         self.curr_t                 = None;
 
         # Read the first two images
-        f0 = self.images_file_path.format(0)
-        f1 = self.images_file_path.format(1)
+        f0 = self.dataset.get_image_file_path(0)
+        f1 = self.dataset.get_image_file_path(1)
 
+        self.focal = self.dataset.get_focal()
+        self.principal_point = self.dataset.get_principal_point()
         self.prev_img = cv2.imread(f0)
         self.curr_img = cv2.imread(f1)
         self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
@@ -55,12 +43,7 @@ class MonoVisualOdometer:
         Returns the XYZ of the ground truth 
         Assumes KITTI Dataset 
         '''
-        line = self.ground_truth_file.readline()
-        words = re.split(' ', line)
-        x = float(words[3])
-        y = float(words[7])
-        z = float(words[-1])
-        return (x, y, z)
+        return self.dataset.get_ground_truth()
 
     def detectFeatures(self, img):
         ''' Returns the features detected by FAST method '''
@@ -113,7 +96,7 @@ class MonoVisualOdometer:
 
         for i in range(2, limit):
             # Get the current image
-            curr_img_file = self.images_file_path.format(i)
+            curr_img_file = self.dataset.get_image_file_path(i)
             self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
 
             self.prev_feature_pts, self.curr_feature_pts = \
