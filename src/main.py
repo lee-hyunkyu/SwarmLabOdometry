@@ -8,6 +8,7 @@ def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
     return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
 
 def getXYZ(file):
+    ''' Gets the X,Y,Z values from groundtruth.txt for KITTI '''
     line = file.readline()
     words = re.split(' ', line)
     x = float(words[3])
