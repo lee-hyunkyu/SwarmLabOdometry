@@ -3,13 +3,12 @@ import cv2
 import pdb
 import re
 from MonoVisualOdometer import *
+from Dataset import *
 
 def main():
-    images_file_path = '../KITTIDataset/dataset/sequences/00/image_0'
-    groundtruth_file_path = '../KITTIDataset/dataset/poses/00.txt'
-    calib_file_path = '../KITTIDataset/dataset/sequences/00/calib.txt'
-    a = MonoVisualOdometer(images_file_path, groundtruth_file_path, calib_file_path)   
-    a.run(20)   
+    kittidataset_00 = KittiDataset(0, 0)
+    a = MonoVisualOdometer(kittidataset_00)   
+    a.run(300)   
 
 if __name__ == "__main__":
     main()
