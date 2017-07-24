@@ -12,9 +12,9 @@ class MonoVisualOdometer:
 
         last_char_in_path = self.images_file_path[-1]
         if last_char_in_path == '/':
-            self.images_file_path   = self.images_file_path + "{06d}.png"
+            self.images_file_path   = self.images_file_path + "{:06d}.png"
         else:
-            self.images_file_path   = self.images_file_path + "/{06d}.png"
+            self.images_file_path   = self.images_file_path + "/{:06d}.png"
         self.ground_truth_file      = open(self.ground_truth_file_path)
 
         # Get Camera Caliberation settings
@@ -30,9 +30,8 @@ class MonoVisualOdometer:
         self.prev_feature_pts       = None;
         self.curr_feature_pts       = None;
         self.fast_detector          = cv2.FastFeatureDetector_create()
-        self.E                      = None;
-        self.R                      = None;
-        self.t                      = None;
+        self.curr_R                 = None;
+        self.curr_t                 = None;
 
         # Read the first two images
         f0 = self.images_file_path.format(0)
@@ -45,7 +44,8 @@ class MonoVisualOdometer:
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
-        self.E, self.R, self.t = getTranslationRotation()
+        pdb.set_trace()
+        _, self.curr_R, self.curr_t = self.getTranslationRotation()
         self.step()
 
     def end(self):
@@ -100,8 +100,6 @@ class MonoVisualOdometer:
 
     def run(self, limit):
         # Initialize values
-        t_f = self.t
-        R_f = self.R
         prev_x, prev_y, prev_z = self.getGroundtruthXYZ()
 
         # For video
@@ -123,15 +121,25 @@ class MonoVisualOdometer:
                 self.prev_feature_pts, self.curr_feature_pts = \
                     self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
+            # Get the translation and rotation
+            E, R, t = self.getTranslationRotation();
+
             x, y, z = self.getGroundtruthXYZ()
             scale   = self.getScale(x, prev_x, y, prev_y, z, prev_z)
+
+            # Update values of curr_t, curr_R
+            self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
+            self.curr_R = np.dot(R, self.curr_R)
+
+            curr_x = curr_t[:,0][0]
+            curr_y = curr_t[:,0][1]
+            curr_z = curr_t[:,0][2]
 
             self.step()
 
     def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
         return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
             
-
     def getTranslationRotation(self):
         E, mask = cv2.findEssentialMat( self.curr_feature_pts, 
                                         self.prev_feature_pts,
