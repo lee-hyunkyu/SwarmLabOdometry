@@ -2,84 +2,14 @@ import numpy as np
 import cv2
 import pdb
 import re
-
-def getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z):
-    ''' Data should be from a ground truth file'''
-    return np.sqrt((x-prev_x)**2 + (y-prev_y)**2 + (z-prev_z)**2)
-
-def getXYZ(file):
-    ''' Gets the X,Y,Z values from groundtruth.txt for KITTI '''
-    line = file.readline()
-    words = re.split(' ', line)
-    x = float(words[3])
-    y = float(words[7])
-    z = float(words[-1])
-    return (x, y, z)
-
-def detectFeatures(img):
-    fast = cv2.FastFeatureDetector_create()
-    kp = fast.detect(img, None)
-    return kp
-
-def trackFeatures(img0, img1, p0):
-    ''' Tracks features from img0 to img1 using LK Tracking 
-        Assumes p0 is a numpy array of <KeyPoint>
-    '''
-    # Change shape/format of p0 for calcOpticalFlowPyrLK
-    p0 = np.float32([[p.pt[0], p.pt[1]] for p in p0]).reshape(-1, 1, 2)
-    p1, status, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None)
-
-    # Reshape p1, status, err
-    p1      = p1[:,0]
-    status  = status[:,0]
-    err     = err[:,0] 
-
-    # Modify status; marks points tracked off screen to be invalid
-    status = np.array([s if (p[0] > 0 and p[1] > 1) else 0 for s, p in zip(status, p1)])
-
-    # Filter the points that failed to be tracked
-    p1 = [p if s else None for s, p in zip(status, p1)]
-    p1 = filter(lambda p: p is not None, p1)
-    p1 = list(p1)
-    p1 = np.float32(p1)
-
-    # Filter out the points in p0 that could not be tracked
-    p0 = [p if s else None for s, p in zip(status, p0)]
-    p0 = filter(lambda p: p is not None, p0)
-    p0 = list(p0)
-    p0 = np.float32(p0)
-
-    assert(sum(status) == len(p1))
-    assert(sum(status) == len(p0))
-
-    # Reshape p1 to have the extra dimension as it's necessary for other functions
-    p1 = p1.reshape(-1, 1, 2);
-    p0 = p0.reshape(-1, 1, 2);
-    return (p0, p1, status, err)
+from MonoVisualOdometer import *
 
 def main():
-    img0 = None; img1 = None;
-    base = '../KITTIDataset/dataset/sequences/00/image_0/{:06d}.png'
-
-    # Get the first two file names
-    f0 = base.format(0)
-    f1 = base.format(0)
-
-    # Read Images
-    img0 = cv2.imread(f0)
-    img1 = cv2.imread(f1)
-
-    # Convert images to grayscale
-    img0 = cv2.cvtColor(img0, cv2.COLOR_BGR2GRAY)
-    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-
-    # Detect features in first image
-    p0 = detectFeatures(img0)
-    # img_with_features = cv2.drawKeypoints(img, p0, color=(255, 0, 0), outImage=None)
-
-    p0, p1, status, err = trackFeatures(img0, img1, p0)
-
-    
+    images_file_path = '../KITTIDataset/dataset/sequences/00/image_0'
+    groundtruth_file_path = '../KITTIDataset/dataset/poses/00.txt'
+    calib_file_path = '../KITTIDataset/dataset/sequences/00/calib.txt'
+    a = MonoVisualOdometer(images_file_path, groundtruth_file_path, calib_file_path)   
+    a.run(20)   
 
 if __name__ == "__main__":
     main()

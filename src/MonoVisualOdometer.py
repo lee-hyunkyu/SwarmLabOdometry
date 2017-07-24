@@ -172,7 +172,4 @@ class MonoVisualOdometer:
         return (E, R, t)
 
 
-a = MonoVisualOdometer('/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/sequences/00/image_0', '/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/poses/00.txt', '/Users/hyunkyu/Developer/SwarmLab/SwarmLabOdometry/KITTIDataset/dataset/sequences/00/calib.txt')   
-a.run(20)
-
 
