@@ -15,7 +15,7 @@ class MonoVisualOdometer:
             self.images_file_path   = self.images_file_path + "{06d}.png"
         else:
             self.images_file_path   = self.images_file_path + "/{06d}.png"
-        #self.ground_truth_file      = open(self.ground_truth_file_path)
+        self.ground_truth_file      = open(self.ground_truth_file_path)
 
         # Get Camera Caliberation settings
         calib_file              = open(calib_file_path)
@@ -30,9 +30,24 @@ class MonoVisualOdometer:
         self.prev_feature_pts       = None;
         self.curr_feature_pts       = None;
         self.prev_key_features_pts  = None;
-        self.curr_key_features_pts  = None;
-
+        self.curr_key_features_pts  = None; # In general, never calculated
         self.fast_detector          = cv2.FastFeatureDetector_create()
+        self.E                      = None;
+        self.R                      = None;
+        self.t                      = None;
+
+        # Read the first two images
+        f0 = self.images_file_path.format(0)
+        f1 = self.images_file_path.format(1)
+
+        self.prev_img = cv2.imread(f0)
+        self.curr_img = cv2.imread(f1)
+        self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
+        self.curr_img = cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY)
+        self.prev_key_features_pts, self.prev_feature_pts = self.detectFeatures(self.prev_img)
+        self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
+
+        self.E, self.R, self.t = getTranslationRotation()
 
     def end(self):
         self.ground_truth_file.close()
