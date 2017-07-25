@@ -4,12 +4,13 @@ import re
 import sys
 import pdb
 import os
+from Evaluator import *
 
 class MonoVisualOdometer:
     '''
     An implementation of MVO
     '''
-    def __init__(self, dataset, min_number_of_features):
+    def __init__(self, dataset, evaluator, min_number_of_features=2000):
 
         self.dataset = dataset
 
@@ -21,7 +22,6 @@ class MonoVisualOdometer:
         self.fast_detector          = cv2.FastFeatureDetector_create()
         self.curr_R                 = None;
         self.curr_t                 = None;
-        self.min_number_of_features = min_number_of_features;
 
         # Read the first two images
         f0 = self.dataset.get_image_file_path(0)
@@ -31,13 +31,25 @@ class MonoVisualOdometer:
         self.principal_point = self.dataset.get_principal_point()
         self.prev_img = cv2.imread(f0)
         self.curr_img = cv2.imread(f1)
-        self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
-        self.curr_img = cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY)
+
+        # Check if evaluator exists
+        if evaluator:
+            self.evaluator = evaluator
+        else:
+            # Create an evaluator that does not modify the images
+            self.evaluator = Evaluator(min_number_of_features, None, np.shape(self.curr_img))
+        self.min_number_of_features = self.evaluator.min_num_of_features
+
+        # Continue processing the images
+        self.prev_img = self.evaluator.process_img(cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY));
+        self.curr_img = self.evaluator.process_img(cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY));
+
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
         _, self.curr_R, self.curr_t = self.getTranslationRotation()
         self.step()
+
 
     def end(self):
         self.ground_truth_file.close()
@@ -101,7 +113,7 @@ class MonoVisualOdometer:
         for i in range(2, limit):
             # Get the current image
             curr_img_file = self.dataset.get_image_file_path(i)
-            self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
+            self.curr_img = self.evaluator.process_img(cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY))
 
             self.prev_feature_pts, self.curr_feature_pts = \
                 self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
