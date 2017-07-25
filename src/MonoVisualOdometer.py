@@ -6,7 +6,10 @@ import pdb
 import os
 
 class MonoVisualOdometer:
-    def __init__(self, dataset):
+    '''
+    An implementation of MVO
+    '''
+    def __init__(self, dataset, min_number_of_features):
 
         self.dataset = dataset
 
@@ -18,6 +21,7 @@ class MonoVisualOdometer:
         self.fast_detector          = cv2.FastFeatureDetector_create()
         self.curr_R                 = None;
         self.curr_t                 = None;
+        self.min_number_of_features = min_number_of_features;
 
         # Read the first two images
         f0 = self.dataset.get_image_file_path(0)
@@ -103,7 +107,7 @@ class MonoVisualOdometer:
                 self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
             # If you lose too many features, redetect
-            if len(self.prev_feature_pts < 2000):
+            if len(self.prev_feature_pts < self.min_number_of_features):
                 _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
                 self.prev_feature_pts, self.curr_feature_pts = \
                     self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
@@ -152,6 +156,4 @@ class MonoVisualOdometer:
                                         self.prev_feature_pts,
                                         focal=self.focal, pp=self.principal_point)
         return (E, R, t)
-
-
 
