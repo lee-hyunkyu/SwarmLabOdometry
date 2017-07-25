@@ -14,6 +14,8 @@ class Evaluator:
 
     def __init__(self, min_num_of_features, log_file_path, reshape_size):
         self.min_num_of_features = min_num_of_features
+        if not log_file_path:
+            log_file_path = '../logs/Evaluator/default.txt'
         logging.basicConfig(filename= log_file_path, 
                         level       = logging.DEBUG,
                         filemode    = 'w',
