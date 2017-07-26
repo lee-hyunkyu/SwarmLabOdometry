@@ -31,7 +31,12 @@ class Evaluator:
 
     def process_img(self, img):
         ''' Downsamples/reshapes image as determiend by the object's variables '''
-        return cv2.resize(img, self.reshape_size)
+        img_h, img_w = np.shape(img)
+        height, width = self.reshape_size
+        x_min = int(img_w/2 - width/2)
+        y_min = int(img_h/2 - height/2)
+        new_img = img[y_min:y_min+height, x_min:x_min+width]
+        return new_img
 
     def log(self, frame_num, estimated_x, ground_truth_x, estimated_y, ground_truth_y, estimated_z, ground_truth_z):
         msg_format = '{:06d}: diff_x = {:03f}, diff_y = {:03f}, diff_z = {:03f}'
