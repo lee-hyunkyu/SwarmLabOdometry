@@ -1,8 +1,14 @@
-"""Performs FAST corner detection without machine generated code."""
+"""
+Performs FAST corner detection without machine generated code.
+
+References:
+    - http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_fast/py_fast.html
+    - http://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
+"""
 
 import numpy as np
 import cv2
-import matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 # TODO: Convert image to array or 2D list?
 
@@ -29,27 +35,27 @@ def circle(row, col):
     """
     point1 = (row+3, col)
     """
-    point2 = (row+3, col+1, 2)
-    point3 = (row+3, col-1, 3)
-    point4 = (row+2, col+2, 4)
+    point2 = (row+3, col+1)
+    point3 = (row+3, col-1)
+    point4 = (row+2, col+2)
     """
     point5 = (row+1, col+3)
     """
-    point6 = (row, col+3, 6)
-    point7 = (row-1, col+3, 7)
-    point8 = (row+2, col+2, 8)
+    point6 = (row, col+3)
+    point7 = (row-1, col+3)
+    point8 = (row+2, col+2)
     """
     point9 = (row-3, col)
     """
-    point10 = (row-3, col+1, 10)
-    point11 = (row-3, col-1, 11)
-    point12 = (row-2, col-2, 12)
+    point10 = (row-3, col+1)
+    point11 = (row-3, col-1)
+    point12 = (row-2, col-2)
     """
     point13 = (row+1, col-3)
     """
-    point14 = (row, col-3, 14)
-    point15 = (row-1, col-3, 15)
-    point16 = (row-2, col-2, 16)
+    point14 = (row, col-3)
+    point15 = (row-1, col-3)
+    point16 = (row-2, col-2)
     return [point1, point2, point3, point4, point5, point6, point7, \
             point8, point9, point10, point11, point12, point13, point14, point15, point16]"""
     return [point1, point5, point9, point13]
@@ -90,15 +96,14 @@ def is_corner(image, row, col, ROI, threshold):
 
     return count >= 3
      
-def detect(image, threshold=25):
+def detect(image, threshold=100):
     """
     corners = fast.detect(image, threshold) performs the detection
     on the image and returns the corners as a list of (x,y) tuples and the 
     scored as a list of of integers. The score is computed using binary search
     over all possible thresholds
 
-    Setting nonmax = 0 performs corner detection but suppresses nonmaximal suppression 
-    (edge thinning technique)
+    Nonmaximal suppression (edge thinning technique) rs implemented by default. 
 
     This function does not search the entire frame for corners. It only searches a portion
     in the middle in order to speed up the process.
@@ -113,7 +118,7 @@ def detect(image, threshold=25):
     rows = image.shape[0]
     cols = image.shape[1]
     startSearchRow = int(0.25*rows)
-    endSearchRow = int(0.75*rows) # search the middle half of the frame
+    endSearchRow = int(0.75*rows) # search the middle square of the frame
     startSearchCol = int(0.25*cols)
     endSearchCol = int(0.75*cols)
 
@@ -125,9 +130,14 @@ def detect(image, threshold=25):
     return corners;
 
 def test():
-    image = cv2.imread('/Users/timmytimmyliu/research/maap/images/template.png');
+    image = cv2.imread('/Users/timmytimmyliu/research/odometry/test_images/ansel.jpg');
+    #image = cv2.imread('/Users/timmytimmyliu/research/odometry/test_images/square.jpg');
+    #image = cv2.imread('/Users/timmytimmyliu/research/odometry/test_images/chessboard.jpg');
     image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     corners = detect(image)
-
+    implot = plt.imshow(image, cmap='gray')
+    for point in corners:
+        plt.scatter(point[0], point[1], s=10)
+    plt.show()
 
 test()
