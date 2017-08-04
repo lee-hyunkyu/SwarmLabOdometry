@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '..')
 import numpy as np 
-from src.util import *
+from src.util.extract_nullspace import *
 import unittest 
 import math;
 from src import *
@@ -28,8 +28,8 @@ class TestExtractNullspace(unittest.TestCase):
                 for u3 in range(-100, 100):
                     u = [u1, u2, u3]
                     np_length = np.linalg.norm(np.array(u))
-                    length = length(U)
-                    math.isclose(np_length, length, rel_tol=margin)
+                    l = length(u)
+                    math.isclose(float(np_length), float(l), rel_tol=margin)
 
     def test_svd_of_essential_matrix(self):
         pass
