@@ -38,7 +38,7 @@ class MonoVisualOdometer:
         else:
             # Create an evaluator that does not modify the images
             h, w, color = np.shape(self.curr_img)
-            self.evaluator = Evaluator(min_number_of_features, None, (h, w))
+            self.evaluator = Evaluator(min_number_of_features, log_file_path=None)
         self.min_number_of_features = self.evaluator.min_num_of_features
 
         # Continue processing the images
