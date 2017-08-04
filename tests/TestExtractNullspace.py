@@ -10,43 +10,47 @@ import numpy.testing as nptest
 
 class TestExtractNullspace(unittest.TestCase):
 
-    @unittest.skip
     def test_cross_product(self):
-        for u1, v1 in zip(range(-100, 100), reversed(range(-100, 100))):
-            for u2, v2 in zip(range(-100, 100), reversed(range(-100, 100))):
-                for u3, v3 in zip(range(-100, 100), reversed(range(-100, 100))):
-                    u = [u1, u2, u3];
-                    v = [v1, v2, v3];
-                    c1 = np.cross(np.array(u), np.array(v));
-                    c2 = cross_product(u, v);
+        for _ in range(100):
+            u = np.random.rand(3)
+            v = np.random.rand(3)
+            c1 = np.cross(u, v)
+            u = u.tolist()
+            v = v.tolist()
+            c2 = cross_product(u, v)
+            nptest.assert_array_almost_equal(c1, np.array(c2))
                     
-    @unittest.skip
     def test_l2_norm(self):
         margin = 1e-10;
-        for u1 in range(-100, 100):
-            for u2 in range(-100, 100):
-                for u3 in range(-100, 100):
-                    u = [u1, u2, u3]
-                    np_length = np.linalg.norm(np.array(u))
-                    l = length(u)
-                    self.assertTrue(math.isclose(float(np_length), float(l), rel_tol=margin))
+        for _ in range(100):
+            u = np.random.rand(3)
+            np_length = np.linalg.norm(u)
+            u = u.tolist()
+            l = length(u)
+            nptest.assert_almost_equal(np_length, l)
 
     def test_svd_of_essential_matrix(self):
         pass
 
     def test_matrix_multiplication(self):
-        pass
+        for _ in range(1000): # Test 100 times
+            mat     = np.random.rand(3, 3)
+            u       = np.random.rand(3)
+            np_p    = np.dot(mat, u)
+            mat     = mat.tolist()
+            u       = u.tolist()
+            p       = dot(mat, u)
+            nptest.assert_array_almost_equal(np_p, np.array(p))
 
     def test_dot_product(self):
-        margin = 1e-10;
-        for u1, v1 in zip(range(-30, 30), reversed(range(-30, 30))):
-            for u2, v2 in zip(range(-30, 30), reversed(range(-30, 30))):
-                for u3, v3 in zip(range(-30, 30), reversed(range(-30, 30))):
-                    u = [u1, u2, u3];
-                    v = [v1, v2, v3];
-                    d1 = np.dot(np.array(u), np.array(v))
-                    d2 = dot_v(u, v);
-                    self.assertEqual(d1, d2)
+        for _ in range(100):
+            u = np.random.rand(3)
+            v = np.random.rand(3)
+            d1 = np.dot(u, v);
+            u = u.tolist()
+            v = v.tolist()
+            d2 = dot_v(u, v);
+            nptest.assert_array_almost_equal(d1, np.array(d2))
 
 if __name__ == '__main__':
     unittest.main()
