@@ -34,7 +34,7 @@ class Dataset:
 
 class KittiDataset(Dataset):
 
-    BASE = '../KITTIDataset/dataset/'
+    BASE = '../Datasets/KITTIDataset/dataset/'
     IMAGES_FILE_PATH_BASE = BASE + 'sequences/{:02d}/image_{:01d}'
     GROUND_TRUTH_FILE_PATH_BASE = BASE + 'poses/{:02d}.txt'
     CALIB_FILE_PATH_BASE = BASE + 'sequences/{:02d}/calib.txt'
@@ -46,7 +46,7 @@ class KittiDataset(Dataset):
                          KittiDataset.GROUND_TRUTH_FILE_PATH_BASE.format(sequence_num), 
                          KittiDataset.CALIB_FILE_PATH_BASE.format(sequence_num))
         # Get calibration settings
-        calib_file              = open('../KITTIDataset/dataset/sequences/00/calib.txt')
+        calib_file              = open(KittiDataset.CALIB_FILE_PATH_BASE.format(sequence_num))
         line                    = calib_file.readline()
         words                   = re.split(' ', line)
         self.focal              = float(words[1])

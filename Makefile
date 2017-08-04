@@ -1,5 +1,5 @@
 main:
-	echo "Pass"
+	$(MAKE) -C src main
 
 test:
 	echo "Pass"
