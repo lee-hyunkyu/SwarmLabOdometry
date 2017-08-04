@@ -1,3 +1,5 @@
+import math
+
 def extract_nullspace(mat):
     ''' Assumes that mat is a valid essential matrix
         Determines the nullspace of mat given the above assumption.
@@ -16,7 +18,9 @@ def cross_product(u, v):
 
 def length(u):
     ''' Returns the L2 norm of a 3d vector u '''
-    pass
+    u1, u2, u3 = u;
+    return math.sqrt(u1*u1 + u2*u2 + u3*u3);
+    
 
 def dot(mat, u):
     ''' Returns the matrix multiplication of a 3x3 mat,  3x1 u '''
