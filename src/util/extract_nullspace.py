@@ -29,7 +29,8 @@ def dot_v(u, v):
 
 def dot(mat, u):
     ''' Returns the matrix multiplication of a 3x3 mat,  3x1 u '''
-    pass
+    m1, m2, m3 = mat; # Get the row vectors of mat;
+    return [ dot_v(m1, u), dot_v(m2, u), dot_v(m3, u) ]
 
 def svd(E):
     ''' Returns the SVD of an essential matrix E'''
