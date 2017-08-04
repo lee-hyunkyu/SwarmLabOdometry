@@ -19,8 +19,13 @@ def cross_product(u, v):
 def length(u):
     ''' Returns the L2 norm of a 3d vector u '''
     u1, u2, u3 = u;
-    return math.sqrt(u1*u1 + u2*u2 + u3*u3);
+    return math.sqrt(dot_v(u, u));
     
+def dot_v(u, v):
+    ''' Returns the dot product of two 3x1 vectors '''
+    u1, u2, u3 = u;
+    v1, v2, v3 = v;
+    return u1*v1 + u2*v2 + u3*v3
 
 def dot(mat, u):
     ''' Returns the matrix multiplication of a 3x3 mat,  3x1 u '''
@@ -30,3 +35,5 @@ def svd(E):
     ''' Returns the SVD of an essential matrix E'''
     ''' Assumes that E is of the form [ (a b c), (d e f), (g h i) ]'''
     ''' Assumes that E is a true Essential matrix, i.e. rank 2 '''
+    pass
+
