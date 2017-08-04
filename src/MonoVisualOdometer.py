@@ -4,9 +4,13 @@ import re
 import sys
 import pdb
 import os
+from Evaluator import *
 
 class MonoVisualOdometer:
-    def __init__(self, dataset):
+    '''
+    An implementation of MVO
+    '''
+    def __init__(self, dataset, evaluator, min_number_of_features=2000):
 
         self.dataset = dataset
 
@@ -27,13 +31,26 @@ class MonoVisualOdometer:
         self.principal_point = self.dataset.get_principal_point()
         self.prev_img = cv2.imread(f0)
         self.curr_img = cv2.imread(f1)
-        self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
-        self.curr_img = cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY)
+
+        # Check if evaluator exists
+        if evaluator:
+            self.evaluator = evaluator
+        else:
+            # Create an evaluator that does not modify the images
+            h, w, color = np.shape(self.curr_img)
+            self.evaluator = Evaluator(min_number_of_features, log_file_path=None)
+        self.min_number_of_features = self.evaluator.min_num_of_features
+
+        # Continue processing the images
+        self.prev_img = self.evaluator.process_img(cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY));
+        self.curr_img = self.evaluator.process_img(cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY));
+
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
         _, self.curr_R, self.curr_t = self.getTranslationRotation()
         self.step()
+
 
     def end(self):
         self.ground_truth_file.close()
@@ -97,13 +114,13 @@ class MonoVisualOdometer:
         for i in range(2, limit):
             # Get the current image
             curr_img_file = self.dataset.get_image_file_path(i)
-            self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
+            self.curr_img = self.evaluator.process_img(cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY))
 
             self.prev_feature_pts, self.curr_feature_pts = \
                 self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
             # If you lose too many features, redetect
-            if len(self.prev_feature_pts < 2000):
+            if len(self.prev_feature_pts < self.min_number_of_features):
                 _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
                 self.prev_feature_pts, self.curr_feature_pts = \
                     self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
@@ -123,7 +140,6 @@ class MonoVisualOdometer:
             curr_z = self.curr_t[:,0][2]
 
             prev_x, prev_y, prev_z = (x, y, z)
-
             # Draw
             cv2.circle(traj, (int(curr_x + 300), int(curr_z + 100)), 1, (255, 0, 0), 2)
             cv2.circle(traj, (int(x + 300), int(z + 100)), 1, (0, 255, 0), 2)
@@ -153,6 +169,4 @@ class MonoVisualOdometer:
                                         self.prev_feature_pts,
                                         focal=self.focal, pp=self.principal_point)
         return (E, R, t)
-
-
 
