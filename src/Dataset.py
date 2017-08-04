@@ -82,7 +82,7 @@ class ComputerVisionDataset(Dataset):
                          KittiDataset.GROUND_TRUTH_FILE_PATH_BASE.format(sequence_num), 
                          KittiDataset.CALIB_FILE_PATH_BASE.format(sequence_num))
         # Get caliberation settings
-        calib_file              = open(self.camera_calib_file_path)
+        calib_file              = open(KittiDataset.CALIB_FILE_PATH_BASE.format(sequence_num))
         line                    = calib_file.readline()
         fx                      = line[0]
         fy                      = line[1]

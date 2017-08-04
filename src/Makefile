@@ -1,4 +1,5 @@
 all: main
 
 main:
-	python3 main.py
+    echo "Running main"
+    python3 main.py
