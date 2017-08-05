@@ -71,7 +71,6 @@ class TestExtractRT(unittest.TestCase):
             d2 = dot_v(u, v);
             nptest.assert_array_almost_equal(d1, np.array(d2))
 
-    @unittest.skip
     def test_mat(self):
         for _ in range(100):
             A = np.random.rand(3,3)

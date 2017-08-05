@@ -38,7 +38,15 @@ def multiply_scaler(u, s):
 def dot_mat(A, B):
     ''' Returns a matrix that is the multiplication of 2 R(3x3) matrixes '''
     # First transpose B in order to get the columns of B
-    pass
+    B_t = transpose(B)
+    b1, b2, b3 = B_t # b1, b2, b3 are the column vectors of B
+
+    # Create the column vectors for the product
+    a1, a2, a3 = dot(A, b1), dot(A, b2), dot(A, b3)
+    # Stack them as row vectors
+    C = [a1, a2, a3]
+    # Transpose
+    return transpose(C)
 
 def transpose(A):
     '''
