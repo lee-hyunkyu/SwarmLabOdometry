@@ -1,12 +1,5 @@
 import math
 
-def extract_nullspace(mat):
-    ''' Assumes that mat is a valid essential matrix
-        Determines the nullspace of mat given the above assumption.
-        Implementation of Nister's Efficient SVD of Essential  Matrix 
-    '''
-    pass
-
 def cross_product(u, v):
     ''' Returns (u x v) '''
     u1, u2, u3 = u
