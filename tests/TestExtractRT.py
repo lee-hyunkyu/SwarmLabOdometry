@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '..')
 import numpy as np 
-from src.util.extract_nullspace import *
+from src.util.extract_R_t import *
 import unittest 
 import math;
 from src import *
@@ -70,6 +70,20 @@ class TestExtractRT(unittest.TestCase):
             v = v.tolist()
             d2 = dot_v(u, v);
             nptest.assert_array_almost_equal(d1, np.array(d2))
+
+    @unittest.skip
+    def test_mat(self):
+        for _ in range(100):
+            A = np.random.rand(3,3)
+            B = np.random.rand(3,3)
+            np_prod = np.dot(A, B)
+            A = A.tolist()
+            B = B.tolist()
+            prod = dot_mat(A, B)
+            nptest.assert_array_almost_equal(np_prod, np.array(prod))
+
+    def test_R_t(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
