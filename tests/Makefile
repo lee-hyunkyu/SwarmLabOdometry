@@ -1,3 +1,3 @@
-test-null_space:
+test-rt:
 	echo "Testing Nullspace Extraction"
-	python3 TestExtractNullspace.py
+	python3 TestExtractRT.py

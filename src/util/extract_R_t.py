@@ -1,5 +1,9 @@
 import math
 
+def extract_R_t(E):
+    ''' Given a matrix E, recovers R, t '''
+    pass
+
 def cross_product(u, v):
     ''' Returns (u x v) '''
     u1, u2, u3 = u
@@ -30,6 +34,29 @@ def multiply_scaler(u, s):
     u1, u2, u3 = u;
     u1, u2, u3 = (s*u1, s*u2, s*u3)
     return [u1, u2, u3]
+
+def dot_mat(A, B):
+    ''' Returns a matrix that is the multiplication of 2 R(3x3) matrixes '''
+    # First transpose B in order to get the columns of B
+    pass
+
+def transpose(A):
+    '''
+    Returns the transpose of a 3x3 matrix
+    '''
+    a1, a2, a3 = A # Get the row vectors
+
+    # Decompose the row vectors
+    a11, a12, a13 = a1
+    a21, a22, a23 = a2
+    a31, a32, a33 = a3
+
+    # Build the new row vectors
+    a1 = [a11, a21, a31]
+    a2 = [a12, a22, a32]
+    a3 = [a13, a23, a33]
+
+    return [a1, a2, a3]
 
 def scaled_svd(E):
     ''' Returns an SVD of an essential matrix E such that E ~ USV*

@@ -7,5 +7,5 @@ main:
 test:
 	echo "Pass"
 
-test-null_space:
-	$(MAKE) -C $(TESTS) test-null_space
+test-rt:
+	$(MAKE) -C $(TESTS) test-rt

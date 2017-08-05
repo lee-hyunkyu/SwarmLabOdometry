@@ -82,6 +82,13 @@ class TestExtractRT(unittest.TestCase):
             prod = dot_mat(A, B)
             nptest.assert_array_almost_equal(np_prod, np.array(prod))
 
+    def test_transpose(self):
+        for _ in range(100):
+            A = np.random.rand(3, 3)
+            np_transpose = np.transpose(A)
+            trans = transpose(A.tolist())
+            nptest.assert_array_equal(np_transpose, trans)
+
     def test_R_t(self):
         pass
 
