@@ -16,7 +16,7 @@ logging.basicConfig(filename    = log_file_path,
                     format      = '%(message)s')
 logger = logging.getLogger()
 
-class TestExtractNullspace(unittest.TestCase):
+class TestExtractRT(unittest.TestCase):
 
     def test_cross_product(self):
         for _ in range(100):
