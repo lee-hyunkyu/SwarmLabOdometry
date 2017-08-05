@@ -82,10 +82,7 @@ def scaled_svd(E):
     v_b = cross_product(v_c, v_a)
 
     # Properly construct V from the column vectors v_a, v_b, v_c
-    v11, v21, v31 = v_a
-    v12, v22, v32 = v_b
-    v13, v23, v33 = v_c
-    V = [(v11, v12, v13), (v21, v22, v23), (v31, v32, v33)]
+    V = transpose([v_a, v_b, v_c])
 
     # Calculate columns of U from the vectors v
     u_a = dot(E, v_a)
@@ -100,10 +97,7 @@ def scaled_svd(E):
     u_c = multiply_scaler(u_c, 1/length(u_c))
 
     # Properly construct U from the column vectors u_a, u_b, u_c
-    u11, u21, u31 = u_a
-    u12, u22, u32 = u_b
-    u13, u23, u33 = u_c
-    U = [(u11, u12, u13), (u21, u22, u23), (u31, u32, u33)]
+    U = transpose([u_a, u_b, u_c])
 
     scaling_factor = scaling_factor/2 # Takes the average because of floating point errors
 
