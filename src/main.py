@@ -11,7 +11,7 @@ def main():
     log_file_path   = './../logs/Evaluator/00.txt'
     evaluator       = Evaluator(1000, log_file_path)
     a = MonoVisualOdometer(kittidataset_00, None)   
-    a.run(300)   
+    a.run(1000)   
 
 if __name__ == "__main__":
     main()

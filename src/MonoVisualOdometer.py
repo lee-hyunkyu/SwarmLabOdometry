@@ -111,7 +111,7 @@ class MonoVisualOdometer:
         cv2.namedWindow('Road facing camera', cv2.WINDOW_AUTOSIZE);
         cv2.namedWindow('Trajectory', cv2.WINDOW_AUTOSIZE);
         traj = np.zeros((600, 600, 3), np.uint8)
-
+        j = 0
         for i in range(2, limit):
             # Get the current image
             curr_img_file = self.dataset.get_image_file_path(i)
@@ -134,14 +134,17 @@ class MonoVisualOdometer:
             scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
             
             # Update values of curr_t, curr_R
-            self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
-            self.curr_R = np.dot(R, self.curr_R)
+            # A heuristic that checks that movement forward is the dominant motion when movement is fairly large
+            if scale > 0.1 and t[:,0][2] > t[:,0][0] and t[:,0][2] > t[:,0][1]:
+                self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
+                self.curr_R = np.dot(R, self.curr_R)
 
             # If you lose too many features, redetect
             if len(self.prev_feature_pts) < self.min_number_of_features:
                 _,  self.prev_feature_pts = self.detectFeatures(self.prev_img)
                 self.prev_feature_pts, self.curr_feature_pts = \
-                    self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts) 
+                    self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
+                j = i
 
             curr_x = self.curr_t[:,0][0]
             curr_y = self.curr_t[:,0][1]
@@ -152,8 +155,8 @@ class MonoVisualOdometer:
             cv2.circle(traj, (int(curr_x + 300), int(curr_z + 100)), 1, (255, 0, 0), 2)
             cv2.circle(traj, (int(x + 300), int(z + 100)), 1, (0, 255, 0), 2)
             cv2.rectangle(traj, (10, 30), (590, 100), (0, 0, 0), thickness=-1)
-            text = "Coordinates: x = {:02.2f}m y = {:02.2f}m z = {:02.2f}m\nFrame = {:02d}m"
-            text = text.format(curr_x, curr_y, curr_z, i)
+            text = "Coordinates: x = {:02.2f}m y = {:02.2f}m z = {:02.2f}m\nFrame = {:02d}, {:02d}"
+            text = text.format(curr_x, curr_y, curr_z, i, i-j)
             cv2.putText(traj, text, (10, 50), cv2.FONT_HERSHEY_PLAIN, 1, 255)
 
             cv2.imshow("Road facing camera", self.curr_img);
