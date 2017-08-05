@@ -32,9 +32,59 @@ def dot(mat, u):
     m1, m2, m3 = mat; # Get the row vectors of mat;
     return [ dot_v(m1, u), dot_v(m2, u), dot_v(m3, u) ]
 
-def svd(E):
-    ''' Returns the SVD of an essential matrix E'''
-    ''' Assumes that E is of the form [ (a b c), (d e f), (g h i) ]'''
-    ''' Assumes that E is a true Essential matrix, i.e. rank 2 '''
-    pass
+def multiply_scaler(u, s):
+    ''' Returns product of some 3x1 vector u with a scaler s '''
+    u1, u2, u3 = u;
+    u1, u2, u3 = (s*u1, s*u2, s*u3)
+    return [u1, u2, u3]
 
+def scaled_svd(E):
+    ''' Returns an SVD of an essential matrix E such that E ~ USV*
+        The multiplication is only correct up to a scale
+        Assumes that E is of the form [ (a b c), (d e f), (g h i) ]
+        Assumes that E is a true Essential matrix, i.e. rank 2 
+    '''
+    e_a, e_b, e_c = E
+    c1 = cross_product(e_a, e_b)    
+    c2 = cross_product(e_a, e_c)
+    c3 = cross_product(e_b, e_c)
+    l1, l2, l3 = (length(c1), length(c2), length(c3))
+    longestLength = max(l1, l2, l3)
+
+    if l1 is longestLength:
+        v_c = multiply_scaler(c1, 1/length(c1))
+    elif l2 is longestLength:
+        v_c = multiply_scaler(c2, 1/length(c2))
+    else: 
+        v_c = multiply_scaler(c3, 1/length(c3))
+
+    v_a = multiply_scaler(e_a, 1/length(e_a))
+    v_b = cross_product(v_c, v_a)
+
+    # Properly construct V from the column vectors v_a, v_b, v_c
+    v11, v21, v31 = v_a
+    v12, v22, v32 = v_b
+    v13, v23, v33 = v_c
+    V = [(v11, v12, v13), (v21, v22, v23), (v31, v32, v33)]
+
+    # Calculate columns of U from the vectors v
+    u_a = dot(E, v_a)
+    scaling_factor = length(u_a); # This is for testing purposes
+    u_a = multiply_scaler(u_a, 1/length(u_a))
+
+    u_b = dot(E, v_b)
+    scaling_factor += length(u_b)
+    u_b = multiply_scaler(u_b, 1/length(u_b))
+
+    u_c = cross_product(u_a, u_b)
+    u_c = multiply_scaler(u_c, 1/length(u_c))
+
+    # Properly construct U from the column vectors u_a, u_b, u_c
+    u11, u21, u31 = u_a
+    u12, u22, u32 = u_b
+    u13, u23, u33 = u_c
+    U = [(u11, u12, u13), (u21, u22, u23), (u31, u32, u33)]
+
+    scaling_factor = scaling_factor/2 # Takes the average because of floating point errors
+
+    return (U, V, scaling_factor)

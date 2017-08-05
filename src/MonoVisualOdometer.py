@@ -5,6 +5,7 @@ import sys
 import pdb
 import os
 from Evaluator import *
+import pickle
 
 class MonoVisualOdometer:
     '''
@@ -119,14 +120,15 @@ class MonoVisualOdometer:
             self.prev_feature_pts, self.curr_feature_pts = \
                 self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
-            # If you lose too many features, redetect
-            if len(self.prev_feature_pts < self.min_number_of_features):
-                _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
-                self.prev_feature_pts, self.curr_feature_pts = \
-                    self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
-
             # Get the translation and rotation
             E, R, t = self.getTranslationRotation();
+
+            with open('../tests/saved_test_data/essential_matrix/essential_matrix_{:06d}.p'.format(i), 'wb') as f:
+                pickle.dump(E, f)
+            with open('../tests/saved_test_data/R/R_{:06d}.p'.format(i), 'wb') as f:
+                pickle.dump(R, f)
+            with open('../tests/saved_test_data/t/t_{:06d}.p'.format(i), 'wb') as f:
+                pickle.dump(t, f)
 
             x, y, z = self.getGroundtruthXYZ()
             scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
@@ -134,6 +136,12 @@ class MonoVisualOdometer:
             # Update values of curr_t, curr_R
             self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
             self.curr_R = np.dot(R, self.curr_R)
+
+            # If you lose too many features, redetect
+            if len(self.prev_feature_pts) < self.min_number_of_features:
+                _,  self.prev_feature_pts = self.detectFeatures(self.prev_img)
+                self.prev_feature_pts, self.curr_feature_pts = \
+                    self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts) 
 
             curr_x = self.curr_t[:,0][0]
             curr_y = self.curr_t[:,0][1]
@@ -143,9 +151,9 @@ class MonoVisualOdometer:
             # Draw
             cv2.circle(traj, (int(curr_x + 300), int(curr_z + 100)), 1, (255, 0, 0), 2)
             cv2.circle(traj, (int(x + 300), int(z + 100)), 1, (0, 255, 0), 2)
-            cv2.rectangle(traj, (10, 30), (550, 50), (0, 0, 0), thickness=-1)
-            text = "Coordinates: x = {:02f}m y = {:02f}m z = {:02f}m   "
-            text = text.format(curr_x, curr_y, curr_z)
+            cv2.rectangle(traj, (10, 30), (590, 100), (0, 0, 0), thickness=-1)
+            text = "Coordinates: x = {:02.2f}m y = {:02.2f}m z = {:02.2f}m\nFrame = {:02d}m"
+            text = text.format(curr_x, curr_y, curr_z, i)
             cv2.putText(traj, text, (10, 50), cv2.FONT_HERSHEY_PLAIN, 1, 255)
 
             cv2.imshow("Road facing camera", self.curr_img);

@@ -7,6 +7,14 @@ import math;
 from src import *
 import pickle;
 import numpy.testing as nptest
+import logging
+
+log_file_path = '../logs/test.text'
+logging.basicConfig(filename    = log_file_path, 
+                    level       = logging.DEBUG,
+                    filemode    = 'w',
+                    format      = '%(message)s')
+logger = logging.getLogger()
 
 class TestExtractNullspace(unittest.TestCase):
 
@@ -30,7 +38,18 @@ class TestExtractNullspace(unittest.TestCase):
             nptest.assert_almost_equal(np_length, l)
 
     def test_svd_of_essential_matrix(self):
-        pass
+        S = np.diag([1, 1, 0])
+        for i in range(2, 250):
+            with open('saved_test_data/essential_matrix/essential_matrix_{:06d}.p'.format(i), 'rb') as f:
+                E = pickle.load(f)
+                # import pdb; pdb.set_trace();
+                # U, s, V = np.linalg.svd(E, full_matrices=True)
+                # logger.info('E=' + str(E) + '\nU=' + str(U) + '\ns=' + str(s) + '\nV=' + str(V) + '\n=====>')
+                U, V, scale = scaled_svd(E)
+                U = np.array(U)
+                V = np.array(V)
+                E_ = np.dot(U, np.dot(S, np.transpose(V)))
+                nptest.assert_array_almost_equal(E, scale*np.array(E_))
 
     def test_matrix_multiplication(self):
         for _ in range(1000): # Test 100 times
