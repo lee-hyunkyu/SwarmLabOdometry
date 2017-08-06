@@ -16,6 +16,11 @@ logging.basicConfig(filename    = log_file_path,
                     format      = '%(message)s')
 logger = logging.getLogger()
 
+E_mat       = 'saved_test_data/essential_matrix/essential_matrix_{:06d}.p'
+R_mat       = 'saved_test_data/R/R_{:06d}.p'
+t_mat       = 'saved_test_data/t/t_{:06d}.p'
+feature_pts = 'saved_test_data/feature_points/feature_points_{:06d}.p'
+
 class TestExtractRT(unittest.TestCase):
 
     def test_cross_product(self):
@@ -89,7 +94,23 @@ class TestExtractRT(unittest.TestCase):
             nptest.assert_array_equal(np_transpose, trans)
 
     def test_R_t(self):
-        pass
+        for i in range(2, 250):
+            with open(E_mat.format(i), 'rb') as E_file, \
+                 open(R_mat.format(i), 'rb') as R_file, \
+                 open(t_mat.format(i), 'rb') as t_file, \
+                 open(feature_pts.format(i), 'rb') as pts_file:
+
+                E               = pickle.load(E_file)
+                R_actual        = pickle.load(R_file)
+                t_actual        = pickle.load(t_file)
+                feature_points  = pickle.load(pts_file)
+                prev_pts, curr_pts = feature_points
+                prev_pts = prev_pts[:,0]
+                curr_pts = curr_pts[:,0]
+                R_test, t_test = extract_R_t(E)
+                nptest.assert_array_almost_equal(R_actual, np.array(R_test))
+                nptest.assert_array_almost_equal(t_actual, np.array(t_test))
+
 
 if __name__ == '__main__':
     unittest.main()
