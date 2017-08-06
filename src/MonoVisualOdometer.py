@@ -129,6 +129,8 @@ class MonoVisualOdometer:
                 pickle.dump(R, f)
             with open('../tests/saved_test_data/t/t_{:06d}.p'.format(i), 'wb') as f:
                 pickle.dump(t, f)
+            with open('../tests/saved_test_data/feature_points/feature_points_{:06d}.p'.format(i), 'wb') as f:
+                pickle.dump((self.prev_feature_pts, self.curr_feature_pts), f)
 
             x, y, z = self.getGroundtruthXYZ()
             scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
