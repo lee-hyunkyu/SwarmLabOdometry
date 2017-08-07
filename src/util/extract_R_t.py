@@ -1,8 +1,16 @@
 import math
 
-def extract_R_t(E):
+def extract_R_t(E, prev_pts, curr_pts):
     ''' Given a matrix E, recovers R, t '''
-    pass
+    U, V, _ = scaled_svd(E)
+    u1, u2, u3 = transpose(U) # Get the columns of U
+    t = u3
+    D = [[1, 0, 0], [0, 1, 0], [0, 0, 0]] # diag(1, 1, 0)
+    R_a = dot_mat(U, dot_mat(D, transpose(V)))
+    
+
+    #triangulation(E, prev_pts[0], curr_pts[0], P_A)
+    return None, t
 
 def cross_product(u, v):
     ''' Returns (u x v) '''
