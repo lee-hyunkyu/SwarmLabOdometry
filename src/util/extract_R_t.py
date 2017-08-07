@@ -110,3 +110,20 @@ def scaled_svd(E):
     scaling_factor = scaling_factor/2 # Takes the average because of floating point errors
 
     return (U, V, scaling_factor)
+
+def triangulation(E, q0, q1, potential_P):
+    ''' Given the essential matrix, 2 corresponding points, and a potential solution of R, t
+        q0 is the point in view 1, q1 is hte same point in view 2
+    '''
+    diag = [[1, 0, 0], [0, 1, 0], [0, 0, 0]]
+    c = cross_product(q1, dot_v(diag, dot(E, q0)))
+    C = dot(transpose(potential), c)
+    C1, C2, C3, C4 = C
+    d1, d2, d3 = q0
+    Q = [0, 0, 0, 0] # placeholder
+    Q[0] = d1*C4
+    Q[1] = d2*C4
+    q[2] = d3*C4
+    Q[3] = -dot_v([d1, d2, d3], [C1, C2, C3])
+    return Q
+
