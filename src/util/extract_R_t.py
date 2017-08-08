@@ -31,7 +31,6 @@ def extract_R_t(E, prev_pts, curr_pts):
     isInFrontOfSecondCamera    = False
     Q1, Q2, Q3, Q4 = Q
     c1 = Q3*Q4 
-    import pdb; pdb.set_trace()
     c2 = dot_v(P_A, Q)
     c2 = c2[3]*Q4
 
@@ -86,10 +85,15 @@ def length(u):
     return math.sqrt(dot_v(u, u));
     
 def dot_v(u, v):
-    ''' Returns the dot product of two 3x1 vectors '''
-    u1, u2, u3 = u;
-    v1, v2, v3 = v;
-    return u1*v1 + u2*v2 + u3*v3
+    ''' Returns the dot product of two vectors '''
+    l1, l2 = (len(u), len(v))
+    if l1 is not l2:
+        dot_prod = None # Invalid
+    else:
+        dot_prod = 0
+        for i in range(l1):
+            dot_prod += u[i]*v[i]
+    return dot_prod
 
 def dot(mat, u):
     ''' Returns the matrix multiplication of a nx3 mat,  3x1 u '''
@@ -99,41 +103,44 @@ def dot(mat, u):
     return product
 
 def multiply_scaler(u, s):
-    ''' Returns product of some 3x1 vector u with a scaler s '''
-    u1, u2, u3 = u;
-    u1, u2, u3 = (s*u1, s*u2, s*u3)
-    return [u1, u2, u3]
+    ''' Returns product of some vector u with a scaler s '''
+    l1 = len(u)
+    new_vec = [0 for i in range(l1)]
+    for i in range(l1):
+        new_vec[i] = u[i]*s
+    return new_vec  
 
 def dot_mat(A, B):
     ''' Returns a matrix that is the multiplication of 2 R(3x3) matrixes '''
     # First transpose B in order to get the columns of B
+    n1 = len(A) # Get the number of rows of A
+    n2 = len(B) # Get the number of rows of B
     B_t = transpose(B)
-    b1, b2, b3 = B_t # b1, b2, b3 are the column vectors of B
+    # Get the number of columns
+    m2 = len(B)
+    m1 = len(A[0]) # Assumes that the matrix is properly formed
 
-    # Create the column vectors for the product
-    a1, a2, a3 = dot(A, b1), dot(A, b2), dot(A, b3)
-    # Stack them as row vectors
-    C = [a1, a2, a3]
+    # Check that matrix multiplication is valid
+    if n1 is not m2 and n2 is not m1:
+        return None
+
+    new_mat = []
+    for i in range(m2):
+        new_mat += [dot(A, B_t[i])]
+
     # Transpose
-    return transpose(C)
+    return transpose(new_mat)
 
 def transpose(A):
     '''
-    Returns the transpose of a 3x3 matrix
+    Returns the transpose of a matrix
     '''
-    a1, a2, a3 = A # Get the row vectors
-
-    # Decompose the row vectors
-    a11, a12, a13 = a1
-    a21, a22, a23 = a2
-    a31, a32, a33 = a3
-
-    # Build the new row vectors
-    a1 = [a11, a21, a31]
-    a2 = [a12, a22, a32]
-    a3 = [a13, a23, a33]
-
-    return [a1, a2, a3]
+    m1, n1 = len(A), len(A[0])
+    new_mat = [[] for i in range(n1)]
+    for i in range(n1):
+        for j in range(m1):
+            new_mat[i] += [A[j][i]]
+    return new_mat
 
 def scaled_svd(E):
     ''' Returns an SVD of an essential matrix E such that E ~ USV*

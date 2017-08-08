@@ -22,7 +22,6 @@ t_mat       = 'saved_test_data/t/t_{:06d}.p'
 feature_pts = 'saved_test_data/feature_points/feature_points_{:06d}.p'
 
 class TestExtractRT(unittest.TestCase):
-
     def test_cross_product(self):
         for _ in range(100):
             u = np.random.rand(3)
@@ -32,7 +31,8 @@ class TestExtractRT(unittest.TestCase):
             v = v.tolist()
             c2 = cross_product(u, v)
             nptest.assert_array_almost_equal(c1, np.array(c2))
-                    
+    
+              
     def test_l2_norm(self):
         margin = 1e-10;
         for _ in range(100):
@@ -41,7 +41,7 @@ class TestExtractRT(unittest.TestCase):
             u = u.tolist()
             l = length(u)
             nptest.assert_almost_equal(np_length, l)
-
+    
     def test_svd_of_essential_matrix(self):
         S = np.diag([1, 1, 0])
         for i in range(2, 250):
@@ -55,27 +55,27 @@ class TestExtractRT(unittest.TestCase):
                 V = np.array(V)
                 E_ = np.dot(U, np.dot(S, np.transpose(V)))
                 nptest.assert_array_almost_equal(E, scale*np.array(E_))
-
+    
     def test_matrix_multiplication(self):
         for _ in range(1000): # Test 100 times
-            mat     = np.random.rand(3, 3)
-            u       = np.random.rand(3)
+            mat     = np.random.rand(int(np.random.rand(1)[0])*5+1, int(np.random.rand(1)[0])*5+1)
+            u       = np.random.rand(int(np.random.rand(1)[0])*5+1)
             np_p    = np.dot(mat, u)
             mat     = mat.tolist()
             u       = u.tolist()
             p       = dot(mat, u)
             nptest.assert_array_almost_equal(np_p, np.array(p))
-
+    
     def test_dot_product(self):
         for _ in range(100):
-            u = np.random.rand(3)
-            v = np.random.rand(3)
+            u = np.random.rand(int(np.random.rand(1)[0])*5+1)
+            v = np.random.rand(int(np.random.rand(1)[0])*5+1)
             d1 = np.dot(u, v);
             u = u.tolist()
             v = v.tolist()
             d2 = dot_v(u, v);
             nptest.assert_array_almost_equal(d1, np.array(d2))
-
+    
     def test_mat(self):
         for _ in range(100):
             A = np.random.rand(3,3)
@@ -88,7 +88,7 @@ class TestExtractRT(unittest.TestCase):
 
     def test_transpose(self):
         for _ in range(100):
-            A = np.random.rand(3, 3)
+            A = np.random.rand(int(np.random.rand(1)[0])*5+2, int(np.random.rand(1)[0])*5+2)
             np_transpose = np.transpose(A)
             trans = transpose(A.tolist())
             nptest.assert_array_equal(np_transpose, trans)
@@ -108,7 +108,7 @@ class TestExtractRT(unittest.TestCase):
                 prev_pts = prev_pts[:,0]
                 curr_pts = curr_pts[:,0]
                 R_test, t_test = extract_R_t(E, prev_pts, curr_pts)
-                # nptest.assert_array_almost_equal(R_actual, np.array(R_test))
+                nptest.assert_array_almost_equal(R_actual, np.array(R_test))
                 nptest.assert_array_almost_equal(t_actual[:,0], np.array(t_test))
 
 
