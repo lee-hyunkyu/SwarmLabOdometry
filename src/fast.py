@@ -1,32 +1,31 @@
 """
 Performs FAST corner detection without machine generated code.
 
-References:
+Reference:
     - http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_fast/py_fast.html
-    - http://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
 """
-
-import numpy as np
 
 def shape(array):
     """ 
     Returns a list of 2D array dimensions 
     """
-    rows = 0
-    for row in range(len(array)):
-        row += 1
+    rows = len(array)
 
-    cols = 0
-    for cols in range(len(array[0])):
-        cols += 1
-
+    cols = len(array[0])
     return [rows, cols]
 
-def zeros(n):
-    """ 
-    Returns the n x n zero matrix
+def rgb2gray(array):
     """
-    return [[0 for i in range(0, n)] for j in range(0, n)]
+    Transforms RGB image matrix into grayscale. 
+    Uses formula from: https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
+    """
+    rows, cols = shape(array)
+    for row in range(rows):
+        for col in range(cols):
+            red, green, blue = array[row][col]
+            gray = int(0.3*red + 0.59*green + 0.11*blue)
+            array[row][col] = gray
+
 
 def circle(row, col):
     """ 
@@ -220,18 +219,17 @@ def detect(image, threshold=100):
     """
 
     corners = []
-    rows = image.shape[0]
-    cols = image.shape[1]
+    imshape = shape(image)
+    rows = imshape[0]
+    cols = imshape[1]
     startSearchRow = int(0.25*rows)
     endSearchRow = int(0.75*rows) # search the middle square of the frame
     startSearchCol = int(0.25*cols)
     endSearchCol = int(0.75*cols)
-
     for row in range(startSearchRow, endSearchRow):
         for col in range(startSearchCol, endSearchCol):
             ROI = circle(row, col) 
             if is_corner(image, row, col, ROI, threshold):
                 corners.append((col, row))
-    suppress(image, corners) 
+    #suppress(image, corners) 
     return corners;
-
