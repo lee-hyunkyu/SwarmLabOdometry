@@ -1,3 +1,7 @@
 # README
 
 Implementation of Mono Visual Odometry using python
+
+## Problems
+
+- Extraction of R, T; We can find R correctly but cannot correctly determine the direction of t
