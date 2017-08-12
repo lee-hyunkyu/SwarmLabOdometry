@@ -55,6 +55,18 @@ class TestExtractRT(unittest.TestCase):
                 V = np.array(V)
                 E_ = np.dot(U, np.dot(S, np.transpose(V)))
                 nptest.assert_array_almost_equal(E, scale*np.array(E_))
+                self.assertTrue(np.linalg.det(U) > 0)
+                self.assertTrue(np.linalg.det(V) > 0)
+                self.assertTrue(scale > 0)
+                u_a, u_b, u_c = transpose(U)
+                v_a, v_b, v_c = transpose(V)
+                nptest.assert_array_almost_equal(np.dot(u_a, u_b), 0)
+                nptest.assert_array_almost_equal(np.dot(u_a, u_c), 0)
+                nptest.assert_array_almost_equal(np.dot(u_b, u_c), 0)
+                nptest.assert_array_almost_equal(np.dot(v_a, v_b), 0)
+                nptest.assert_array_almost_equal(np.dot(v_b, v_c), 0)
+                nptest.assert_array_almost_equal(np.dot(v_a, v_c), 0)
+ 
     
     def test_matrix_multiplication(self):
         for _ in range(1000): # Test 100 times
@@ -93,23 +105,27 @@ class TestExtractRT(unittest.TestCase):
             trans = transpose(A.tolist())
             nptest.assert_array_equal(np_transpose, trans)
 
+    
     def test_R_t(self):
-        for i in range(2, 250):
-            with open(E_mat.format(i), 'rb') as E_file, \
-                 open(R_mat.format(i), 'rb') as R_file, \
-                 open(t_mat.format(i), 'rb') as t_file, \
-                 open(feature_pts.format(i), 'rb') as pts_file:
+        for i in range(2, 500):
+            with    open(E_mat.format(i), 'rb') as E_file, \
+                    open(R_mat.format(i), 'rb') as R_file, \
+                    open(t_mat.format(i), 'rb') as t_file, \
+                    open(feature_pts.format(i), 'rb') as pts_file:
 
                 E               = pickle.load(E_file)
                 R_actual        = pickle.load(R_file)
                 t_actual        = pickle.load(t_file)
                 feature_points  = pickle.load(pts_file)
+                principal_point = (607.1928, 185.2157) # KITTIDataset Pose 00
+                focal_length    = 718.856
+
                 prev_pts, curr_pts = feature_points
                 prev_pts = prev_pts[:,0]
                 curr_pts = curr_pts[:,0]
-                R_test, t_test = extract_R_t(E, prev_pts, curr_pts)
-                nptest.assert_array_almost_equal(R_actual, np.array(R_test))
+                R_test, t_test = extract_R_t(E, prev_pts, curr_pts, principal_point, focal_length)
                 nptest.assert_array_almost_equal(t_actual[:,0], np.array(t_test))
+                nptest.assert_array_almost_equal(R_actual, np.array(R_test))
 
 
 if __name__ == '__main__':
