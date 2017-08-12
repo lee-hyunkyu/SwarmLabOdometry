@@ -1,7 +1,8 @@
-*.gitignore
+.gitignore
 KITTIDataset
 **/__pycache__
 logs/*
 untitled.py
 Datasets
 five_point_algorithm
+
