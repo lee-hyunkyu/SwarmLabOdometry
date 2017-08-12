@@ -1,74 +1,103 @@
-import math
+'''
+Implementation of Nister's 5 point algorithm without any dependencies
+'''
 
-def extract_R_t(E, prev_pts, curr_pts):
+import math
+import logging
+log_file_path = '../logs/test.text'
+logging.basicConfig(filename    = log_file_path, 
+                    level       = logging.DEBUG,
+                    filemode    = 'w',
+                    format      = '%(message)s')
+logger = logging.getLogger()
+
+def extract_R_t(E, prev_pts, curr_pts, principal_point, focal_length):
     ''' Given a matrix E, recovers R, t '''
     U, V, _ = scaled_svd(E)
-    u1, u2, u3 = transpose(U) # Get the columns of U
-    v1, v2, v3 = transpose(V) # Get the columns of V
-    t = multiply_scaler(u3, 1/length(u3)) # Normalize to be of length 1
-    D = [[1, 0, 0], [0, 1, 0], [0, 0, 0]] # diag(1, 1, 0)
-    R_a = dot_mat(U, dot_mat(D, transpose(V)))
+    u1, u2, u3 = transpose(U)
+    Vt = transpose(V)
+    v1, v2, v3 = Vt # Get the columns of V
 
-    # Construct P_A = [ R_a | t]
+    t = u3
+
+    D = [[0, 1, 0], [-1, 0, 0], [0, 0, 1]]
+    R_a = dot_mat(U, dot_mat(D, Vt))
+    PA, PB, PC, PD = 0, 0, 0, 0 # Initialize 
     t1, t2, t3 = t
+    # Construct the pose [R_a | t]
     R1, R2, R3 = R_a
-    r11, r12, r13 = R1 
-    r21, r22, r23 = R2 
-    r31, r32, r33 = R3 
+    potential_pose = [  [R1[0], R1[1], R1[2], t1], 
+                        [R2[0], R2[1], R2[2], t2],
+                        [R3[0], R3[1], R3[2], t3] ]
+    R_b = dot_mat(U, dot_mat(transpose(D), Vt))
 
-    P_A = [ [r11, r12, r13, t1],
-            [r21, r22, r23, t2], 
-            [r31, r32, r33, t3] ]
-
-    pp1, pp2 = prev_pts[0]
-    cp1, cp2 = curr_pts[0]
-
-    Q = triangulation(E, [pp1, pp2, 1], [cp1, cp2, 1], P_A)
-
-    # Determine the real location
-    # Must be in front of both cameras
-    isInFrontOfFirstCamera     = False
-    isInFrontOfSecondCamera    = False
-    Q1, Q2, Q3, Q4 = Q
-    c1 = Q3*Q4 
-    c2 = dot_v(P_A, Q)
-    c2 = c2[3]*Q4
-
-    pose = P_A
-
-    if c1*c2 < 0:
-        # Rotation is incorrect. Rotate another 180 around the baseline
-        R_b = dot_mat(U, dot_mat(transpose(D), transpose(V)))
-        R1, R2, R3 = R_b
-        pose = P_A
+    # Prepare for the loop below that will look at 100 points to determine the correct camera matrix
+    dist = 3000  # filter out points that are too far away
+    pp_x, pp_y = principal_point
+    # Construct Ht, a matrix that transfrom P_a -> P_c
+    Ht = [  [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [-2*v3[0], -2*v3[1], -2*v3[2], -1]  ]
+    total = len(prev_pts)
+    for i in range(10):
+        # Convert my points and change the origin 
+        q0 = prev_pts[total%(i+1)]
+        q1 = curr_pts[total%(i+1)]
+        # "Multiply" my points by the inverse of intrinsic camera matrix
+        q0 = [q0[0], q0[1], 1]
+        q1 = [q1[0], q1[1], 1]
+        q0 =    [q0[0]/focal_length - pp_x/focal_length, \
+                 q0[1]/focal_length - pp_y/focal_length, \
+                 1 ] 
+        q1 =    [q1[0]/focal_length - pp_x/focal_length,\
+                 q1[1]/focal_length - pp_y/focal_length,\
+                 1 ] 
         
-        # Replace R_a with R_b
-        # TODO: Write a better matrix multiplication algorithm
-        pose[0][0] = R1[0]; pose[0][1] = R1[1]; pose[0][2] = R1[2]
-        pose[1][0] = R2[0]; pose[0][1] = R2[1]; pose[0][2] = R2[2]
-        pose[2][0] = R3[0]; pose[0][1] = R3[1]; pose[0][2] = R3[2]
+        if i == 0:
+            import numpy as np
+            logger.info('============')
+            logger.info('qEq = {:f}'.format(np.dot(q1, np.dot(E, q0))))
+            logger.info('det(U) = {:f}'.format(np.linalg.det(U)))
+            logger.info('det(V) = {:f}'.format(np.linalg.det(V)))
+        # Triangulate and find Real World Coordinates
+        Q = triangulation(E, q0, q1, potential_pose)
+        Q1, Q2, Q3, Q4 = Q
+        # Cheirality Check; Make sure the point Q is in front of both cameras
+        c1 = Q3*Q4
+        c2 = dot(potential_pose, Q)[2]*Q4   
 
-        # The translaformation that gives us a "twisted pair"
-        Ht = [  [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [-2*v3[0], -2*v3[1], -2*v3[2], -1]
-             ]
-
-        HtQ = dot_v(Ht, Q)
-        reverse_translation = Q3*HtQ[3] < 0
+        # filter out far away points (infinite points)
+        # At that distance, depth varies between positive and negative
+        if abs(Q3/Q4) < dist: 
+            if c1 > 0 and c2 > 0:
+                PA = PA + 1
+            elif c1 < 0 and c2 < 0:
+                PB = PB + 1
+            else:
+                HtQ = dot(Ht, Q)
+                if HtQ[3]*Q3 > 0:
+                    PC = PC + 1
+                else:
+                    PD = PD + 1
+    
+    mostLikelyPose = max(PA, PB, PC, PD)
+    logger.info("PA = {:2d},\tPB = {:2d},\tPC = {:2d},\tPD = {:2d},\tsum = {:2d}".format(PA, PB, PC, PD, PA+PB+PC+PD))
+    if mostLikelyPose == PA:
+        logger.info('PA')
+        return R_a, t
+    elif mostLikelyPose == PB:
+        logger.info('PB')
+        return R_a, t
+        return R_a, multiply_scaler(t, -1)
+    elif mostLikelyPose == PC:
+        logger.info('PC')
+        return R_b, t
     else:
-        # Rotation is R_a
-        reverse_translation = c1*c2 > 0
-
-    if reverse_translation:
-        # Reverse translation; This is the case of inverting the last column of the pose
-        pose = P_A
-        pose[0][3] = -pose[0][3]
-        pose[1][3] = -pose[1][3]
-        pose[2][3] = -pose[2][3]
-
-    return pose, t
+        logger.info('PD')
+        return R_b, t
+        return R_b, multiply_scaler(t, -1)
+    return R, t
 
 def cross_product(u, v):
     ''' Returns (u x v) '''
@@ -187,31 +216,25 @@ def scaled_svd(E):
 
     return (U, V, scaling_factor)
 
-def triangulation(E, q0, q1, potential_P):
+def triangulation(E, q0, q1, potential_pose):
     ''' Given the essential matrix, 2 corresponding points, and a potential solution of R, t
         q0 is the point in view 1, q1 is hte same point in view 2
     '''
     diag = [[1, 0, 0], [0, 1, 0], [0, 0, 0]]
+    a = dot(transpose(E), q1)
+    b = cross_product(q0, dot(diag, a))
+    d = cross_product(a, b)
+    # Convert to homogenous coordinate
+    # d = [d[0]/d[2], d[1]/d[2], 1] 
+    Q = [0 for i in range(4)] # initialize with 0s
+    #assert(d[0]*q0[0] > 0 and d[1]*q0[1] > 0) # Make assumption that they're in the same ball park
+    
     c = cross_product(q1, dot(diag, dot(E, q0)))
+    C1, C2, C3, C4 = dot(transpose(potential_pose), c)
+    Q1, Q2, Q3 = multiply_scaler(d, C4)
 
-    # Transpose the 4x3 matrix potential_P
-    P1, P2, P3 = potential_P
-    p11, p12, p13, p14 = P1 
-    p21, p22, p23, p24 = P2 
-    p31, p32, p33, p34 = P3 
-
-    potential_P_t = [ [p11, p21, p31],
-                      [p12, p22, p32],
-                      [p13, p23, p33], 
-                      [p14, p24, p34] ]
-
-    C = dot(potential_P_t, c)
-    C1, C2, C3, C4 = C
-    d1, d2, d3 = q0
-    Q = [0, 0, 0, 0] # placeholder
-    Q[0] = d1*C4
-    Q[1] = d2*C4
-    Q[2] = d3*C4
-    Q[3] = -dot_v([d1, d2, d3], [C1, C2, C3])
-    return Q
-
+    #import pdb; pdb.set_trace()
+    Q4 = dot_v(d, [C1, C2, C3])
+    Q = [Q1, Q2, Q3, -Q4]
+    import numpy as np
+    return Q 

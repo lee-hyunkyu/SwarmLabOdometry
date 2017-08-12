@@ -134,7 +134,7 @@ class MonoVisualOdometer:
 
             x, y, z = self.getGroundtruthXYZ()
             scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
-            
+
             # Update values of curr_t, curr_R
             # A heuristic that checks that movement forward is the dominant motion when movement is fairly large
             if scale > 0.1 and t[:,0][2] > t[:,0][0] and t[:,0][2] > t[:,0][1]:
@@ -182,4 +182,3 @@ class MonoVisualOdometer:
                                         self.prev_feature_pts,
                                         focal=self.focal, pp=self.principal_point)
         return (E, R, t)
-
