@@ -31,14 +31,15 @@ def rgb2gray(array):
     Uses formula from: https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
     """
     rows, cols = shape(array)
-
+    grayscale = zeros(rows, cols)
     for row in range(rows):
         for col in range(cols):
             red, green, blue = array[row][col]
             gray = int(0.3*red + 0.59*green + 0.11*blue)
-            array[row][col] = gray
+            grayscale[row][col] = gray
+    return grayscale
 
-def medianBlur(image, startSearchRow, endSearchRow, startSearchCol, endSearchCol, N=5):
+def medianBlur(image, startSearchRow, endSearchRow, startSearchCol, endSearchCol, N=3):
     """
     Performs median blur on image to remove severe salt and pepper noise.
     Median blur replaces each pixel with the median of the NxN pixels surrounding it.
@@ -47,8 +48,7 @@ def medianBlur(image, startSearchRow, endSearchRow, startSearchCol, endSearchCol
     In order to increase performnace, this function only applies median blur to the 
     search area, not the entire image.
     """
-    rows, cols = shape(image)
-    dst = zeros(rows, cols)
+    dst = image[:] 
     for y in range(startSearchRow, endSearchRow):
         for x in range(startSearchCol, endSearchCol):
             window = []
@@ -56,20 +56,20 @@ def medianBlur(image, startSearchRow, endSearchRow, startSearchCol, endSearchCol
                 for j in range(x - N//2, x + N//2 + 1):
                     window.append(image[i][j])
             insertionSort(window)
-            dst[y][x] = window[len(window)//2 + 1]
+            dst[y][x] = window[len(window)//2]
 
     return dst
-
+    
 def insertionSort(lst):
-    for i in range(1, len(lst)):
-        curr = lst[i]
-        pos = i
+    for index in range(1, len(lst)):
+        currentvalue = lst[index]
+        position = index
 
-        while pos > 0 and lst[pos] > curr:
-            lst[pos] = lst[pos-1]
-            pos -= 1
-        lst[pos] = curr
+        while position > 0 and lst[position - 1] > currentvalue:
+            lst[position] = lst[position - 1]
+            position = position - 1
 
+        lst[position] = currentvalue
 """
 ***** Begin helper functions for FAST *****
 """
@@ -226,6 +226,8 @@ def detect(image, threshold=50):
         image is a numpy array of intensity values. NOTE: Image must be grayscale
         threshold is an int used to filter out non-corners. 
     """
+    # Initialization
+    image = rgb2gray(image)
     corners = []
     rows,cols = shape(image)
     startSearchRow = int(0.25*rows)
@@ -233,6 +235,8 @@ def detect(image, threshold=50):
     startSearchCol = int(0.25*cols)
     endSearchCol = int(0.75*cols)
     image = medianBlur(image, startSearchRow, endSearchRow, startSearchCol, endSearchCol)
+
+    # Begin searching through search area
     for row in range(startSearchRow, endSearchRow):
         for col in range(startSearchCol, endSearchCol):
             ROI = circle(row, col) 
