@@ -1,5 +1,6 @@
 from random import normalvariate
 from math import sqrt
+from matrix_operations import *
 
 def randomUnitVector(n):
     unnormalized = [normalvariate(0, 1) for _ in range(n)]
@@ -58,37 +59,5 @@ def svd(A, k=None, epsilon=1e-10):
 
         svdSoFar.append((sigma, u, v))
 
-    singularValues, us, vs = transpose(svdSoFar)
-    return singularValues, us, vs
-
-def matmul(A, B):
-    if len(A[0]) != len(B):
-        raise TypeError("Invalid matrix dimensions")
-    return [[dot(row, col) for col in transpose(B)] for row in A]
-
-def dot(a, b):
-    if isinstance(a, int):
-        return [a * x for x in b]
-    elif isinstance(b, int):
-        return [b * x for x in a]  
-    elif len(a) != len(b):
-        raise TypeError("Invalid vector dimensions")
-    return sum(a[i] * b[i] for i in range(len(a)))
-
-def transpose(M):
-    if not isinstance(M[0], list):
-        return M
-    return [[M[row][col] for row in range(len(M))] for col in range(len(M[0]))]
-
-def norm(M):
-    if isinstance(M[0], list):
-        x = 0
-        for row in range(len(M)):
-            for col in range(len(M[row])):
-                x += M[row][col]*M[row][col]
-        return sqrt(x)
-    else:
-        return sqrt(dot(M, M))
-
-def outer(a, b):
-    return [[i * j for j in b] for i in a]
+    result = transpose(svdSoFar)
+    return result[0], result[1], result[2]

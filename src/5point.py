@@ -1,5 +1,6 @@
 from svd import svd
 from mblock import createPolynomialMatrix
+from matrix_operations import *
 
 original_points = [[ 0.4964,  1.0577],
                    [ 0.3650, -0.0919],
@@ -48,3 +49,21 @@ def solve5PointEssential(original_points, final_points, num_points):
     singularValues, us, vs = svd(M)
     polynomialMatrix = createPolynomialMatrix(vs)
     
+    X = [[1 for i in range(11)] for j in range(11)]
+    b = [0 for i in range(11)]
+    evaluated = None
+
+    i, j = -5, 0
+    while i <= 5:
+        evaluated = polynomialMatrix.eval(i)
+
+        temp = i
+        for k in range(1, 11):
+            X[j][k] = temp
+            temp *= i
+        b[j] = determinant(evaluated)
+
+        i += 1
+        j += 1
+
+    a = matmul(inverse(X), b)
