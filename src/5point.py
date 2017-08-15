@@ -1,4 +1,5 @@
-from svd import *
+from svd import svd
+from mblock import createPolynomialMatrix
 
 original_points = [[ 0.4964,  1.0577],
                    [ 0.3650, -0.0919],
@@ -44,4 +45,6 @@ def solve5PointEssential(original_points, final_points, num_points):
         M[i][7] = y1
         M[i][8] = 1.0
 
+    singularValues, us, vs = svd(M)
+    polynomialMatrix = createPolynomialMatrix(vs)
     

@@ -10,7 +10,7 @@ class Polynomial:
             raise IndexError("Index out of range")
         elif degree >= len(self):
             return 0
-        return self[degree]
+        return self.coeffs[degree]
 
     def __setitem__(self, degree, value):
         if degree < 0:
