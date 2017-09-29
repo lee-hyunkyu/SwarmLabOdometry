@@ -2,7 +2,7 @@ import os
 import re
 import pdb
 import sys
-
+import cv2
 try:
     sys.path.index(os.path.abspath(os.path.join(os.getcwd(), os.pardir))) # Or os.getcwd() for this directory
 except ValueError:
@@ -32,6 +32,13 @@ class Dataset:
 
     def get_principal_point(self):
         return self.principal_point
+
+    def get_image(self, num, func=lambda x: x):
+        path = self.get_image_file_path(num)
+        img = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2GRAY)
+        return func(img) 
+
+      
 
 class KittiDataset(Dataset):
 
