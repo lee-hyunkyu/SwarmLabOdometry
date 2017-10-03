@@ -26,9 +26,11 @@ def crop_features(feature_pts, image_size, crop_size=(500, 500)):
     return feature_pts
 
 def crop_img(img, crop_size=(128, 128)):
+    if crop_size == (0, 0):
+        return img
     height, width = img.shape
-    min_y = int(height/2 + crop_size[0]/2)
-    min_x = int(width/2 + crop_size[1]/2)
+    min_y = int(height/2 - crop_size[0]/2)
+    min_x = int(width/2 - crop_size[1]/2)
     return img[min_y:min_y + crop_size[0], min_x:min_x+crop_size[1]]
 
 class MonoVisualOdometer:
@@ -52,11 +54,10 @@ class MonoVisualOdometer:
         self.curr_img = self.dataset.get_image(1)
         
         # Crop Image
-        self.crop_size = (300, 300); crop_size_x, crop_size_y = self.crop_size
+        self.crop_size = (150, 150); crop_size_y, crop_size_x = self.crop_size
+        self.principal_point = (crop_size_x/2, crop_size_y/2)
         self.prev_img = crop_img(self.prev_img, self.crop_size)
         self.curr_img = crop_img(self.curr_img, self.crop_size)
-        self.principal_point = (crop_size_x/2, crop_size_y/2)
-        
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
         _, self.curr_R, self.curr_t = self.getTranslationRotation()
@@ -120,6 +121,8 @@ class MonoVisualOdometer:
         cv2.namedWindow('Trajectory', cv2.WINDOW_AUTOSIZE);
         traj = np.zeros((600, 600, 3), np.uint8)
 
+        error_x, error_y, error_z = 0, 0, 0
+
         for i in range(2, limit):
             # Get the current image
             curr_img_file = self.dataset.get_image_file_path(i)
@@ -140,6 +143,7 @@ class MonoVisualOdometer:
             x, y, z = self.getGroundtruthXYZ()
             scale   = self.getAbsoluteScale(x, prev_x, y, prev_y, z, prev_z)
             
+            real_t  = -1*np.array([prev_x - x, prev_y - y, prev_z - z])
             # Update values of curr_t, curr_R
             self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
             self.curr_R = np.dot(R, self.curr_R)
@@ -156,15 +160,16 @@ class MonoVisualOdometer:
             text = "Coordinates: x = {:02f}m y = {:02f}m z = {:02f}m   "
             text = text.format(curr_x, curr_y, curr_z)
             cv2.putText(traj, text, (10, 50), cv2.FONT_HERSHEY_PLAIN, 1, 255)
-
             cv2.imshow("Road facing camera", self.curr_img);
             cv2.imshow("Trajectory", traj);
             cv2.waitKey(1)
 
 
-
             self.step()
 
+        print(len(self.prev_feature_pts))
+        print(abs(curr_x - x))
+        print(abs(curr_y - y))
         cv2.waitKey(0)
         cv2.putText(traj, "Done", (10, 100), cv2.FONT_HERSHEY_PLAIN, 1, 255)
 
