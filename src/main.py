@@ -8,7 +8,7 @@ from Dataset import *
 def main():
     kittidataset_00 = KittiDataset(0, 0)
     a = MonoVisualOdometer(kittidataset_00)   
-    a.run(300)   
+    a.run(50)   
 
 if __name__ == "__main__":
     main()

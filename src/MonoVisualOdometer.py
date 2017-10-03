@@ -5,6 +5,32 @@ import sys
 import pdb
 import os
 
+def crop_features(feature_pts, image_size, crop_size=(500, 500)):
+    '''
+    Given a set of feature pts of shape (N, 1, 2), returns features that are not within a
+    CROP_SIZE square in the center of the original image
+    '''
+    if feature_pts is None:
+        return None
+    height, width = image_size
+    min_y = int(height/2 - crop_size[0]/2)
+    min_x = int(width/2-crop_size[1]/2)
+    
+    feature_pts = feature_pts[:,0] # Remove the additional dimension
+
+    # The indices are reverses here b/c feature_pts returns an array of [[x, y]...]
+    crop_lambda = lambda pt: pt[1] > min_y and pt[1] < min_y + crop_size[1] \
+                             and pt[0] > min_x and pt[0] < min_x + crop_size[0]
+    feature_pts = np.array(list(filter(crop_lambda, feature_pts)))
+    feature_pts = np.reshape(feature_pts, (len(feature_pts), 1, 2))
+    return feature_pts
+
+def crop_img(img, crop_size=(128, 128)):
+    height, width = img.shape
+    min_y = int(height/2 + crop_size[0]/2)
+    min_x = int(width/2 + crop_size[1]/2)
+    return img[min_y:min_y + crop_size[0], min_x:min_x+crop_size[1]]
+
 class MonoVisualOdometer:
     def __init__(self, dataset):
 
@@ -20,18 +46,19 @@ class MonoVisualOdometer:
         self.curr_t                 = None;
 
         # Read the first two images
-        f0 = self.dataset.get_image_file_path(0)
-        f1 = self.dataset.get_image_file_path(1)
-
         self.focal = self.dataset.get_focal()
         self.principal_point = self.dataset.get_principal_point()
-        self.prev_img = cv2.imread(f0)
-        self.curr_img = cv2.imread(f1)
-        self.prev_img = cv2.cvtColor(self.prev_img, cv2.COLOR_BGR2GRAY)
-        self.curr_img = cv2.cvtColor(self.curr_img, cv2.COLOR_BGR2GRAY)
+        self.prev_img = self.dataset.get_image(0)
+        self.curr_img = self.dataset.get_image(1)
+        
+        # Crop Image
+        self.crop_size = (300, 300); crop_size_x, crop_size_y = self.crop_size
+        self.prev_img = crop_img(self.prev_img, self.crop_size)
+        self.curr_img = crop_img(self.curr_img, self.crop_size)
+        self.principal_point = (crop_size_x/2, crop_size_y/2)
+        
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
         self.prev_feature_pts, self.curr_feature_pts = self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
-
         _, self.curr_R, self.curr_t = self.getTranslationRotation()
         self.step()
 
@@ -75,7 +102,6 @@ class MonoVisualOdometer:
         # Reshape to be correct shape
         img1_features = img1_features.reshape(-1, 1, 2)
         img0_features = img0_features.reshape(-1, 1, 2)
-
         return (img0_features, img1_features)
 
     def step(self):
@@ -98,7 +124,7 @@ class MonoVisualOdometer:
             # Get the current image
             curr_img_file = self.dataset.get_image_file_path(i)
             self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
-
+            self.curr_img = crop_img(self.curr_img, self.crop_size)
             self.prev_feature_pts, self.curr_feature_pts = \
                 self.trackFeatures(self.prev_img, self.curr_img, self.prev_feature_pts)
 
@@ -134,6 +160,8 @@ class MonoVisualOdometer:
             cv2.imshow("Road facing camera", self.curr_img);
             cv2.imshow("Trajectory", traj);
             cv2.waitKey(1)
+
+
 
             self.step()
 
