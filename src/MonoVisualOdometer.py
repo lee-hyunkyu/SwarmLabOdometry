@@ -54,8 +54,9 @@ class MonoVisualOdometer:
         self.curr_img = self.dataset.get_image(1)
         
         # Crop Image
-        self.crop_size = (150, 150); crop_size_y, crop_size_x = self.crop_size
-        self.principal_point = (crop_size_x/2, crop_size_y/2)
+        self.crop_size = (128, 128); crop_size_y, crop_size_x = self.crop_size
+        print(self.crop_size)
+        self.principal_point = (crop_size_x/2-1, crop_size_y/2-1)
         self.prev_img = crop_img(self.prev_img, self.crop_size)
         self.curr_img = crop_img(self.curr_img, self.crop_size)
         _, self.prev_feature_pts = self.detectFeatures(self.prev_img)
@@ -86,7 +87,7 @@ class MonoVisualOdometer:
         IMG0_FEATURES should be of shape (-1, 1, 2)
         You should pass in the second return value from detectFeatures
         '''
-        img1_features, status, err = cv2.calcOpticalFlowPyrLK(img0, img1, img0_features, None);
+        img1_features, status, err = cv2.calcOpticalFlowPyrLK(img0, img1, img0_features, None); # TODO: Find others? 
 
         # Reshape to be simpler row vectors and remove the extra dimension
         status = status[:,0] 
@@ -125,6 +126,7 @@ class MonoVisualOdometer:
 
         for i in range(2, limit):
             # Get the current image
+            print(self.prev_feature_pts.shape)
             curr_img_file = self.dataset.get_image_file_path(i)
             self.curr_img = cv2.cvtColor(cv2.imread(curr_img_file), cv2.COLOR_BGR2GRAY)
             self.curr_img = crop_img(self.curr_img, self.crop_size)
@@ -145,8 +147,10 @@ class MonoVisualOdometer:
             
             real_t  = -1*np.array([prev_x - x, prev_y - y, prev_z - z])
             # Update values of curr_t, curr_R
-            self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
-            self.curr_R = np.dot(R, self.curr_R)
+            t_x, t_y, t_z = t
+            if max(t_x, t_y, t_z) == t_z:
+                self.curr_t = self.curr_t + scale*np.dot(self.curr_R, t)
+                self.curr_R = np.dot(R, self.curr_R)
 
             curr_x = self.curr_t[:,0][0]
             curr_y = self.curr_t[:,0][1]
